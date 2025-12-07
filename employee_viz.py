@@ -2,28 +2,30 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import mpld3
 
-# Load dataset
+# === CONFIG ===
+EMAIL = "24f3002886@ds.study.iitm.ac.in"
+HTML_FILE = "employee_histogram.html"
+
+# 1. Load dataset
 df = pd.read_csv("employee_performance.csv")
 
-# Count HR employees
+# 2. Count HR employees
 hr_count = (df["department"] == "HR").sum()
-print("Frequency count for HR department:", hr_count)
+print(f'Frequency count for "HR" department: {hr_count}')
 
-# Force numeric conversion for histogram
-df["department_code"] = df["department"].astype("category").cat.codes
+# 3. Create a HISTOGRAM of performance scores
+fig, ax = plt.subplots()
+ax.hist(df["performance_score"], bins=10)
+ax.set_title("Histogram of Employee Performance Scores")
+ax.set_xlabel("Performance Score")
+ax.set_ylabel("Frequency")
+plt.tight_layout()
 
-# Create HISTOGRAM (not bar chart)
-plt.figure()
-plt.hist(df["department_code"], bins=len(df["department"].unique()))
-plt.title("Histogram of Departments")
-plt.xlabel("Department (Encoded)")
-plt.ylabel("Frequency")
+# 4. Convert the figure to HTML (this includes JS + SVG etc.)
+fig_html = mpld3.fig_to_html(fig)
 
-# Save chart to HTML
-html = mpld3.fig_to_html(plt.gcf())
-
-# Python code text to embed inside HTML
-python_code = """
+# 5. Python code to embed inside HTML (for the autograder)
+python_code = f'''
 import pandas as pd
 import matplotlib.pyplot as plt
 import mpld3
@@ -31,25 +33,23 @@ import mpld3
 df = pd.read_csv("employee_performance.csv")
 
 hr_count = (df["department"] == "HR").sum()
-print("Frequency count for HR department:", hr_count)
+print("Frequency count for \\"HR\\" department:", hr_count)
 
-df["department_code"] = df["department"].astype("category").cat.codes
+fig, ax = plt.subplots()
+ax.hist(df["performance_score"], bins=10)
+ax.set_title("Histogram of Employee Performance Scores")
+ax.set_xlabel("Performance Score")
+ax.set_ylabel("Frequency")
+plt.tight_layout()
 
-plt.hist(df["department_code"], bins=len(df["department"].unique()))
-plt.title("Histogram of Departments")
-plt.xlabel("Department (Encoded)")
-plt.ylabel("Frequency")
+mpld3.save_html(fig, "employee_histogram.html")
+'''
 
-mpld3.save_html(plt.gcf(), "employee_histogram.html")
-"""
-
-email = "24f3002886@ds.study.iitm.ac.in"
-
-# Embed everything
-embed = f"""
+# 6. Build a full HTML page
+extra_block = f"""
 <hr>
-<h2>Verification Block</h2>
-<p>Email: {email}</p>
+<h2>Verification Information</h2>
+<p><b>Email:</b> {EMAIL}</p>
 <p>Frequency count for "HR" department: {hr_count}</p>
 
 <h3>Python Code Used</h3>
@@ -57,14 +57,22 @@ embed = f"""
 <hr>
 """
 
-# Inject into HTML body
-if "</body>" in html:
-    html = html.replace("</body>", embed + "</body>")
-else:
-    html += embed
+full_html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Employee Performance Histogram</title>
+</head>
+<body>
+    <h1>Employee Performance Histogram</h1>
+    {fig_html}
+    {extra_block}
+</body>
+</html>
+"""
 
-# Save final HTML
-with open("employee_histogram.html", "w", encoding="utf-8") as f:
-    f.write(html)
+# 7. Save final HTML file
+with open(HTML_FILE, "w", encoding="utf-8") as f:
+    f.write(full_html)
 
-print("HTML file created with histogram and code inside.")
+print(f"HTML file with chart, email, HR count, and Python code saved to: {HTML_FILE}")

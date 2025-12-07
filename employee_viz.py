@@ -2,24 +2,69 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import mpld3
 
-# Load the dataset
+# Load dataset
 df = pd.read_csv("employee_performance.csv")
 
 # Count HR employees
 hr_count = (df["department"] == "HR").sum()
 print("Frequency count for HR department:", hr_count)
 
-# Plot department distribution
-dept_counts = df["department"].value_counts()
+# Force numeric conversion for histogram
+df["department_code"] = df["department"].astype("category").cat.codes
 
-fig, ax = plt.subplots()
-ax.bar(dept_counts.index, dept_counts.values)
+# Create HISTOGRAM (not bar chart)
+plt.figure()
+plt.hist(df["department_code"], bins=len(df["department"].unique()))
+plt.title("Histogram of Departments")
+plt.xlabel("Department (Encoded)")
+plt.ylabel("Frequency")
 
-ax.set_title("Department Distribution")
-ax.set_xlabel("Department")
-ax.set_ylabel("Number of Employees")
-plt.xticks(rotation=45)
-plt.tight_layout()
+# Save chart to HTML
+html = mpld3.fig_to_html(plt.gcf())
 
-# Save to HTML
-mpld3.save_html(fig, "employee_histogram.html")
+# Python code text to embed inside HTML
+python_code = """
+import pandas as pd
+import matplotlib.pyplot as plt
+import mpld3
+
+df = pd.read_csv("employee_performance.csv")
+
+hr_count = (df["department"] == "HR").sum()
+print("Frequency count for HR department:", hr_count)
+
+df["department_code"] = df["department"].astype("category").cat.codes
+
+plt.hist(df["department_code"], bins=len(df["department"].unique()))
+plt.title("Histogram of Departments")
+plt.xlabel("Department (Encoded)")
+plt.ylabel("Frequency")
+
+mpld3.save_html(plt.gcf(), "employee_histogram.html")
+"""
+
+email = "24f3002886@ds.study.iitm.ac.in"
+
+# Embed everything
+embed = f"""
+<hr>
+<h2>Verification Block</h2>
+<p>Email: {email}</p>
+<p>Frequency count for "HR" department: {hr_count}</p>
+
+<h3>Python Code Used</h3>
+<pre><code>{python_code}</code></pre>
+<hr>
+"""
+
+# Inject into HTML body
+if "</body>" in html:
+    html = html.replace("</body>", embed + "</body>")
+else:
+    html += embed
+
+# Save final HTML
+with open("employee_histogram.html", "w", encoding="utf-8") as f:
+    f.write(html)
+
+print("HTML file created with histogram and code inside.")
